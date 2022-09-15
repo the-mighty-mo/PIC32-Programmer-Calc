@@ -187,13 +187,13 @@ static void UpdateSevenSeg(void)
 {
 	switch (num_base) {
 		case Bin:
-			SevenSeg_WriteDigits(2, 0, 0, 0, 0, 0, 0, 0);
+			SevenSeg_WriteDigits(2, 0x10, 0x10, 0x10, 0, 0, 0, 0);
 			break;
 		case Dec:
-			SevenSeg_WriteDigits(0, 1, 0, 0, 0, 0, 0, 0);
+			SevenSeg_WriteDigits(0, 1, 0x10, 0x10, 0, 0, 0, 0);
 			break;
 		case Hex:
-			SevenSeg_WriteDigits(6, 1, 0, 0, 0, 0, 0, 0);
+			SevenSeg_WriteDigits(6, 1, 0x10, 0x10, 0, 0, 0, 0);
 			break;
 	}
 }

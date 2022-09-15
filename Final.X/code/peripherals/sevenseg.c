@@ -60,12 +60,11 @@ static unsigned char const digitSegments[]= {
     0b1000110, // C
     0b0100001, // d
     0b0000110, // E
-    0b0001110,  // F
-    0b0001001   // H
+    0b0001110  // F
 };
 
 #define NO_DIGITS sizeof(digitSegments)/sizeof(digitSegments[0])
-static volatile unsigned char digits[4];
+static volatile unsigned char digits[4] = {0xFF, 0xFF, 0xFF, 0xFF};
 #define TMR_TIME    0.005 // 5000 us for each tick
 
 /***	Timer1ISR
@@ -230,7 +229,7 @@ static void SevenSeg_ConfigurePins()
 void SevenSeg_Init()
 {
     SevenSeg_ConfigurePins();
-    SevenSeg_Timer1Setup();  
+    SevenSeg_Timer1Setup();
 }
 
 
