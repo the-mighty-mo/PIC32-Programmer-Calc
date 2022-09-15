@@ -1,8 +1,5 @@
 #include "peripherals/keypad.h"
 
-static int8_t key = -1;
-static int8_t last_key = -1;
-
 void Keypad_Init(void)
 {
 	KEYPAD_COL1_ANSEL = 0; // disable analog input
@@ -78,12 +75,11 @@ static uint8_t GetRow(uint8_t cols)
 	return retval;
 }
 
-void Keypad_Process(void)
+int8_t Keypad_GetKey(void)
 {
 	uint8_t const row = GetRow(0xF);
 	if (!row) {
-		key = -1;
-		return;
+		return -1;
 	}
 
 	uint8_t active_cols = 0xF;
@@ -101,20 +97,8 @@ void Keypad_Process(void)
 			active_cols >>= 1;
 			++col;
 		}
-		key = keys[row - 1][col - 1];
+		return keys[row - 1][col - 1];
 	} else {
-		key = -1;
+		return -1;
 	}
-}
-
-uint8_t Keypad_IsNewKey(void)
-{
-	uint8_t const new_key = key != last_key;
-	last_key = key;
-	return new_key;
-}
-
-int8_t Keypad_GetKey(void)
-{
-	return key;
 }

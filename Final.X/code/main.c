@@ -23,32 +23,42 @@
 #include "peripherals/lcd.h"
 #include "peripherals/led.h"
 #include "peripherals/rgbled.h"
+#include "calculator.h"
 #include "input.h"
 #include "utils.h"
 
 static void App_Init()
 {
+	// Initialize all the peripherals
 	BTN_Init();
 	Keypad_Init();
 	SWT_Init();
 	LCD_Init();
 	LED_Init();
 	RGBLED_Init();
+	// Initialize the input module
 	Input_Init();
+	// Initialize the calculator module
+	Calculator_Init();
 }
 
 static void App_Process()
 {
-	Keypad_Process();
+	// Process inputs
 	Input_Process();
+	// Process the calculator
+	Calculator_Process();
 }
 
 int main()
 {
+	// Initialize modules
 	App_Init();
 
 	while (1) {
+		// Run the modules
 		App_Process();
+		// 1 ms delay
 		DelayAprox100Us(10);
 	}
 }
