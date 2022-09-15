@@ -11,6 +11,7 @@
           <itemPath>code/peripherals/lcd.h</itemPath>
           <itemPath>code/peripherals/led.h</itemPath>
           <itemPath>code/peripherals/swt.h</itemPath>
+          <itemPath>code/peripherals/rgbled.h</itemPath>
         </logicalFolder>
         <itemPath>code/utils.h</itemPath>
         <itemPath>code/config.h</itemPath>
@@ -31,6 +32,7 @@
           <itemPath>code/peripherals/lcd.c</itemPath>
           <itemPath>code/peripherals/led.c</itemPath>
           <itemPath>code/peripherals/swt.c</itemPath>
+          <itemPath>code/peripherals/rgbled.c</itemPath>
         </logicalFolder>
         <itemPath>code/utils.c</itemPath>
         <itemPath>code/main.c</itemPath>
