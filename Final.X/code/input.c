@@ -3,6 +3,7 @@
 #include "peripherals/keypad.h"
 #include "peripherals/lcd.h"
 #include "peripherals/led.h"
+#include "peripherals/sevenseg.h"
 #include "peripherals/rgbled.h"
 #include "utils.h"
 #include "peripherals/swt.h"
@@ -42,6 +43,7 @@ static char const operators[] = {'+', '-', '*', '/', '&', '|', '^'};
 static void UpdateBase(void);
 static void NumToStr(uint16_t num, char *str, size_t strlen);
 static void UpdateLcd(void);
+static void UpdateSevenSeg(void);
 static void UpdateNum(uint8_t key);
 
 static void RunOp(void);
@@ -80,6 +82,7 @@ void Input_Init(void)
 	last_swt = 0;
 	
 	ClearLcd();
+	UpdateSevenSeg();
 }
 
 void Input_Process(void)
@@ -180,6 +183,21 @@ static void UpdateLcd(void)
 	RGBLED_SetValue(0, 0, 0);
 }
 
+static void UpdateSevenSeg(void)
+{
+	switch (num_base) {
+		case Bin:
+			SevenSeg_WriteDigits(2, 0, 0, 0, 0, 0, 0, 0);
+			break;
+		case Dec:
+			SevenSeg_WriteDigits(0, 1, 0, 0, 0, 0, 0, 0);
+			break;
+		case Hex:
+			SevenSeg_WriteDigits(6, 1, 0, 0, 0, 0, 0, 0);
+			break;
+	}
+}
+
 static void UpdateBase(void)
 {
 	NumToStr(nums[0], lcd[0] + 1, sizeof(lcd[0]) - 2);
@@ -195,6 +213,8 @@ static void UpdateBase(void)
 	} else {
 		RGBLED_SetValue(0, 0, 0);
 	}
+	
+	UpdateSevenSeg();
 }
 
 static void RunOp(void)
