@@ -31,6 +31,9 @@ static enum Operator {
 static uint8_t btn;
 static uint8_t last_btn;
 
+static uint8_t swt;
+static uint8_t last_swt;
+
 #define GET_BTN(mask) ((btn & mask) && !(last_btn & mask))
 
 static char lcd[2][17];
@@ -47,6 +50,7 @@ static void ResetNums(void)
 {
 	memset(nums, 0, sizeof(nums));
 	num_idx = 0;
+	RGBLED_SetValue(0, 0, 0);
 }
 
 static void ClearLcd(void)
@@ -72,6 +76,9 @@ void Input_Init(void)
 	btn = 0;
 	last_btn = 0;
 	
+	swt = 0;
+	last_swt = 0;
+	
 	ClearLcd();
 }
 
@@ -80,8 +87,9 @@ void Input_Process(void)
 	last_btn = btn;
 	btn = BTN_GetGroupValue();
 
-	uint8_t const swt = SWT_GetGroupValue();
-	if ((swt & (swt - 1)) == 0) {
+	last_swt = swt;
+	swt = SWT_GetGroupValue();
+	if (swt != last_swt && (swt & (swt - 1)) == 0) {
 		// only one switch is set, set operation
 		for (int i = 0; i < sizeof(operators) / sizeof(*operators); ++i) {
 			if (swt & (1 << i)) {
@@ -169,6 +177,7 @@ static void UpdateLcd(void)
 {
 	NumToStr(nums[num_idx], lcd[num_idx] + 1, sizeof(lcd[num_idx]) - 2);
 	LCD_WriteStringAtPos(lcd[num_idx], num_idx, 0);
+	RGBLED_SetValue(0, 0, 0);
 }
 
 static void UpdateBase(void)
@@ -230,6 +239,12 @@ static void RunOp(void)
 	} else {
 		nums[0] = num;
 		UpdateLcd();
+		
+		if (num > 0xFFFF || (num_base == Bin && (num & 0x8000))) {
+			RGBLED_SetValue(0x1F, 0x00, 0x00);
+		} else {
+			RGBLED_SetValue(0, 0, 0);
+		}
 	}
 }
 
