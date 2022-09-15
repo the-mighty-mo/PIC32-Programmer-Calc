@@ -54,6 +54,7 @@ dkms.conf
 # MPLAB X Files
 **/.generated_files/
 **/build/
+**/disassembly/
 **/dist/
 **/nbproject/Makefile-*
 **/nbproject/Package-*

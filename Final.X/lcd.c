@@ -113,10 +113,10 @@ void LCD_ConfigurePins()
 */
 void LCD_WriteByte(unsigned char bData)
 {
-    DelayAprox10Us(5);  
+    DelayAprox100Us(5);  
 	// Configure IO Port data pins as output.
    tris_LCD_DATA &= ~msk_LCD_DATA;
-    DelayAprox10Us(5);  
+    DelayAprox100Us(5);  
 	// clear RW
 	lat_LCD_DISP_RW = 0;
 
@@ -124,16 +124,16 @@ void LCD_WriteByte(unsigned char bData)
     unsigned char *pLCDData = (unsigned char *)(0xBF886430);
     *pLCDData = bData;
 
-    DelayAprox10Us(10);   
+    DelayAprox100Us(10);   
 
 	// Set En
 	lat_LCD_DISP_EN = 1;    
 
-    DelayAprox10Us(5);
+    DelayAprox100Us(5);
 	// Clear En
 	lat_LCD_DISP_EN = 0;
 
-    DelayAprox10Us(5);
+    DelayAprox100Us(5);
 	// Set RW
 	lat_LCD_DISP_RW = 1;
 }
@@ -170,7 +170,7 @@ unsigned char LCD_ReadByte()
 	// Set En
 	lat_LCD_DISP_EN = 1;
 
-    DelayAprox10Us(50);   
+    DelayAprox100Us(50);   
 
     // Clear En
 	lat_LCD_DISP_EN = 0;
@@ -280,26 +280,26 @@ void LCD_InitSequence(unsigned char bDisplaySetOptions)
 {
 	//	wait 40 ms
 
-	DelayAprox10Us(40000);
+	DelayAprox100Us(400);
 	// Function Set
 	LCD_WriteCommand(cmdLcdFcnInit);
 	// Wait ~100 us
-	DelayAprox10Us(10);
+	DelayAprox100Us(10);
 	// Function Set
 	LCD_WriteCommand(cmdLcdFcnInit);
 	// Wait ~100 us
-	DelayAprox10Us(10);	// Display Set
+	DelayAprox100Us(10);	// Display Set
 	LCD_DisplaySet(bDisplaySetOptions);
 	// Wait ~100 us
-	DelayAprox10Us(10);
+	DelayAprox100Us(10);
 	// Display Clear
 	LCD_DisplayClear();
 	// Wait 1.52 ms
-	DelayAprox10Us(160);
+	DelayAprox100Us(160);
     // Entry mode set
 	LCD_WriteCommand(cmdLcdEntryMode);
     	// Wait 1.52 ms
-	DelayAprox10Us(160);
+	DelayAprox100Us(160);
 }
 
 /* ------------------------------------------------------------ */

@@ -2,9 +2,6 @@
 #include "keypad.h"
 #include "lcd.h"
 #include "utils.h"
-#include <string.h>
-
-static void HexToStr(int hex, char *str, size_t strlen);
 
 int main() {
 	Keypad_Init();
@@ -27,29 +24,6 @@ int main() {
 			}
 			last_key = key;
 		}
-		DelayAprox10Us(100);
+		DelayAprox100Us(10);
 	}
-}
-
-static void HexToStr(int hex, char *str, size_t strlen) {
-	int digit_cnt = 0;
-	int rev_hex = 0;
-	while (hex) {
-		rev_hex <<= 4;
-		rev_hex |= hex & 0xF;
-		hex >>= 4;
-		++digit_cnt;
-	}
-
-	int i;
-	for (i = 0; i < strlen && digit_cnt; ++i, --digit_cnt) {
-		uint8_t const hex_digit = rev_hex & 0xF;
-		if (hex_digit >= 0xA) {
-			str[i] = 'A' + hex_digit - 0xA;
-		} else {
-			str[i] = '0' + hex_digit;
-		}
-		rev_hex >>= 4;
-	}
-	memset(str + i, ' ', strlen - i);
 }

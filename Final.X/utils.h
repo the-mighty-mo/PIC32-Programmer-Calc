@@ -14,7 +14,11 @@
 
 #pragma once
 
-void DelayAprox10Us( unsigned int tusDelay );
+#include <stdlib.h>
+#include <string.h>
+
+void DelayAprox100Us( unsigned int tusDelay );
+void HexToStr(int hex, char *str, size_t strlen);
 
 /* *****************************************************************************
  End of File

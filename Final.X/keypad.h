@@ -1,52 +1,52 @@
 #pragma once
 
-#include <xc.h>
+#include "config.h"
 #include <stdint.h>
 
 /* --------- Register defines --------- */
 // Pin 1 (COL4)
-#define KEYPAD_COL4			PORTCbits.RC2
-#define KEYPAD_COL4_TRIS	TRISCbits.TRISC2
-#define KEYPAD_COL4_RP		RPC2R
+#define KEYPAD_COL4			prt_PMODS_JA1
+#define KEYPAD_COL4_TRIS	tris_PMODS_JA1
+#define KEYPAD_COL4_RP		rp_PMODS_JA1
 
 // Pin 2 (COL3)
-#define KEYPAD_COL3			PORTCbits.RC1
-#define KEYPAD_COL3_TRIS	TRISCbits.TRISC1
-#define KEYPAD_COL3_RP		RPC1R
+#define KEYPAD_COL3			prt_PMODS_JA2
+#define KEYPAD_COL3_TRIS	tris_PMODS_JA2
+#define KEYPAD_COL3_RP		rp_PMODS_JA2
 
 // Pin 3 (COL2)
-#define KEYPAD_COL2			PORTCbits.RC4
-#define KEYPAD_COL2_TRIS	TRISCbits.TRISC4
-#define KEYPAD_COL2_RP		RPC4R
+#define KEYPAD_COL2			prt_PMODS_JA3
+#define KEYPAD_COL2_TRIS	tris_PMODS_JA3
+#define KEYPAD_COL2_RP		rp_PMODS_JA3
 
 // Pin 4 (COL1)
-#define KEYPAD_COL1			PORTGbits.RG6
-#define KEYPAD_COL1_TRIS	TRISGbits.TRISG6
-#define KEYPAD_COL1_RP		RPG6R
-#define KEYPAD_COL1_ANSEL	ANSELGbits.ANSG6
+#define KEYPAD_COL1			prt_PMODS_JA4
+#define KEYPAD_COL1_TRIS	tris_PMODS_JA4
+#define KEYPAD_COL1_RP		rp_PMODS_JA4
+#define KEYPAD_COL1_ANSEL	ansel_PMODS_JA4
 
 // Pin 7 (ROW4)
-#define KEYPAD_ROW4			PORTCbits.RC3
-#define KEYPAD_ROW4_TRIS	TRISCbits.TRISC3
-#define KEYPAD_ROW4_RP		RPC3R
+#define KEYPAD_ROW4			prt_PMODS_JA7
+#define KEYPAD_ROW4_TRIS	tris_PMODS_JA7
+#define KEYPAD_ROW4_RP		rp_PMODS_JA7
 
 // Pin 8 (ROW3)
-#define KEYPAD_ROW3			PORTGbits.RG7
-#define KEYPAD_ROW3_TRIS	TRISGbits.TRISG7
-#define KEYPAD_ROW3_RP		RPG7R
-#define KEYPAD_ROW3_ANSEL	ANSELGbits.ANSG7
+#define KEYPAD_ROW3			prt_PMODS_JA8
+#define KEYPAD_ROW3_TRIS	tris_PMODS_JA8
+#define KEYPAD_ROW3_RP		rp_PMODS_JA8
+#define KEYPAD_ROW3_ANSEL	ansel_PMODS_JA8
 
 // Pin 9 (ROW2)
-#define KEYPAD_ROW2			PORTGbits.RG8
-#define KEYPAD_ROW2_TRIS	TRISGbits.TRISG8
-#define KEYPAD_ROW2_RP		RPG8R
-#define KEYPAD_ROW2_ANSEL	ANSELGbits.ANSG8
+#define KEYPAD_ROW2			prt_PMODS_JA9
+#define KEYPAD_ROW2_TRIS	tris_PMODS_JA9
+#define KEYPAD_ROW2_RP		rp_PMODS_JA9
+#define KEYPAD_ROW2_ANSEL	ansel_PMODS_JA9
 
 // Pin 10 (ROW1)
-#define KEYPAD_ROW1			PORTGbits.RG9
-#define KEYPAD_ROW1_TRIS	TRISGbits.TRISG9
-#define KEYPAD_ROW1_RP		RPG9R
-#define KEYPAD_ROW1_ANSEL	ANSELGbits.ANSG9
+#define KEYPAD_ROW1			prt_PMODS_JA10
+#define KEYPAD_ROW1_TRIS	tris_PMODS_JA10
+#define KEYPAD_ROW1_RP		rp_PMODS_JA10
+#define KEYPAD_ROW1_ANSEL	ansel_PMODS_JA10
 
 /* --------- Functions --------- */
 
