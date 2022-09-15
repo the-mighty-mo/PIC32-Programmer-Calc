@@ -64,31 +64,6 @@ void DelayAprox100Us( unsigned int  t100usDelay )
     }   // end while
 }
 
-
-void HexToStr(int hex, char *str, size_t strlen)
-{
-	int digit_cnt = 0;
-	int rev_hex = 0;
-	while (hex) {
-		rev_hex <<= 4;
-		rev_hex |= hex & 0xF;
-		hex >>= 4;
-		++digit_cnt;
-	}
-
-	int i;
-	for (i = 0; i < strlen && digit_cnt; ++i, --digit_cnt) {
-		uint8_t const hex_digit = rev_hex & 0xF;
-		if (hex_digit >= 0xA) {
-			str[i] = 'A' + hex_digit - 0xA;
-		} else {
-			str[i] = '0' + hex_digit;
-		}
-		rev_hex >>= 4;
-	}
-	memset(str + i, ' ', strlen - i);
-}
-
 /* *****************************************************************************
  End of File
  */

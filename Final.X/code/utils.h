@@ -18,7 +18,6 @@
 #include <string.h>
 
 void DelayAprox100Us( unsigned int tusDelay );
-void HexToStr(int hex, char *str, size_t strlen);
 
 /* *****************************************************************************
  End of File

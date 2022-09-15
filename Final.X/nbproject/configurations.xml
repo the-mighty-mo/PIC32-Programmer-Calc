@@ -14,6 +14,7 @@
         </logicalFolder>
         <itemPath>code/utils.h</itemPath>
         <itemPath>code/config.h</itemPath>
+        <itemPath>code/input.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -33,6 +34,7 @@
         </logicalFolder>
         <itemPath>code/utils.c</itemPath>
         <itemPath>code/main.c</itemPath>
+        <itemPath>code/input.c</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"

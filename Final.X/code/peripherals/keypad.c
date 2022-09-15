@@ -3,7 +3,7 @@
 static int8_t key = -1;
 static int8_t last_key = -1;
 
-void Keypad_Init()
+void Keypad_Init(void)
 {
 	KEYPAD_COL1_ANSEL = 0; // disable analog input
 	KEYPAD_COL1_RP = 0; // disable remappable pin
@@ -78,7 +78,7 @@ static uint8_t GetRow(uint8_t cols)
 	return retval;
 }
 
-void Keypad_Process()
+void Keypad_Process(void)
 {
 	uint8_t const row = GetRow(0xF);
 	if (!row) {
@@ -107,14 +107,14 @@ void Keypad_Process()
 	}
 }
 
-uint8_t Keypad_IsNewKey()
+uint8_t Keypad_IsNewKey(void)
 {
 	uint8_t const new_key = key != last_key;
 	last_key = key;
 	return new_key;
 }
 
-int8_t Keypad_GetKey()
+int8_t Keypad_GetKey(void)
 {
 	return key;
 }

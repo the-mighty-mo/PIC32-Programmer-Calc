@@ -3,10 +3,8 @@
 #include "peripherals/keypad.h"
 #include "peripherals/swt.h"
 #include "peripherals/lcd.h"
+#include "input.h"
 #include "utils.h"
-
-static int num = 0;
-static char str[] = "                ";
 
 static void App_Init()
 {
@@ -14,21 +12,13 @@ static void App_Init()
 	Keypad_Init();
 	SWT_Init();
 	LCD_Init();
-	LCD_DisplayClear();
+	Input_Init();
 }
 
 static void App_Process()
 {
 	Keypad_Process();
-	if (Keypad_IsNewKey()) {
-		int8_t const key = Keypad_GetKey();
-		if (key >= 0 && !(num & 0xF0000000)) {
-			num <<= 4;
-			num |= key;
-			HexToStr(num, str, sizeof (str) - 1);
-			LCD_WriteStringAtPos(str, 0, 0);
-		}
-	}
+	Input_Process();
 }
 
 int main()

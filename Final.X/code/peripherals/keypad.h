@@ -53,12 +53,12 @@
 /**
  * Initializes the keypad module.
  */
-void Keypad_Init();
-void Keypad_Process();
+void Keypad_Init(void);
+void Keypad_Process(void);
 
-uint8_t Keypad_IsNewKey();
+uint8_t Keypad_IsNewKey(void);
 /**
  * Returns the first button found to be pressed.
  * Priority is given to row 1, column 1, and row is prioritized above column.
  */
-int8_t Keypad_GetKey();
+int8_t Keypad_GetKey(void);
