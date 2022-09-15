@@ -4,10 +4,15 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>config.h</itemPath>
-      <itemPath>keypad.h</itemPath>
-      <itemPath>lcd.h</itemPath>
-      <itemPath>utils.h</itemPath>
+      <logicalFolder name="code" displayName="code" projectFiles="true">
+        <logicalFolder name="input" displayName="input" projectFiles="true">
+          <itemPath>code/input/input.h</itemPath>
+          <itemPath>code/input/keypad.h</itemPath>
+        </logicalFolder>
+        <itemPath>code/lcd.h</itemPath>
+        <itemPath>code/utils.h</itemPath>
+        <itemPath>code/config.h</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -16,10 +21,15 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>main.c</itemPath>
-      <itemPath>keypad.c</itemPath>
-      <itemPath>lcd.c</itemPath>
-      <itemPath>utils.c</itemPath>
+      <logicalFolder name="code" displayName="code" projectFiles="true">
+        <logicalFolder name="input" displayName="input" projectFiles="true">
+          <itemPath>code/input/input.c</itemPath>
+          <itemPath>code/input/keypad.c</itemPath>
+        </logicalFolder>
+        <itemPath>code/lcd.c</itemPath>
+        <itemPath>code/utils.c</itemPath>
+        <itemPath>code/main.c</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -27,6 +37,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>code</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
@@ -194,7 +207,7 @@
         <property key="use-indirect-calls" value="false"/>
       </C32CPP>
       <C32Global>
-        <property key="common-include-directories" value=""/>
+        <property key="common-include-directories" value="code"/>
         <property key="gp-relative-option" value=""/>
         <property key="legacy-libc" value="true"/>
         <property key="mdtcm" value=""/>
@@ -1376,7 +1389,7 @@
         <property key="use-indirect-calls" value="false"/>
       </C32CPP>
       <C32Global>
-        <property key="common-include-directories" value=""/>
+        <property key="common-include-directories" value="code"/>
         <property key="gp-relative-option" value=""/>
         <property key="legacy-libc" value="true"/>
         <property key="mdtcm" value=""/>
