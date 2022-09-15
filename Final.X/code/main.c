@@ -1,6 +1,8 @@
 #include "config.h"
-#include "input/input.h"
-#include "lcd.h"
+#include "peripherals/btn.h"
+#include "peripherals/keypad.h"
+#include "peripherals/swt.h"
+#include "peripherals/lcd.h"
 #include "utils.h"
 
 static int num = 0;
@@ -8,16 +10,18 @@ static char str[] = "                ";
 
 static void App_Init()
 {
-	Input_Init();
+	BTN_Init();
+	Keypad_Init();
+	SWT_Init();
 	LCD_Init();
 	LCD_DisplayClear();
 }
 
 static void App_Process()
 {
-	Input_Process();
-	if (Input_HasNewKey()) {
-		int8_t const key = Input_GetKey();
+	Keypad_Process();
+	if (Keypad_IsNewKey()) {
+		int8_t const key = Keypad_GetKey();
 		if (key >= 0 && !(num & 0xF0000000)) {
 			num <<= 4;
 			num |= key;

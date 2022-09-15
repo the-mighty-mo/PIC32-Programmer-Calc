@@ -54,6 +54,9 @@
  * Initializes the keypad module.
  */
 void Keypad_Init();
+void Keypad_Process();
+
+uint8_t Keypad_IsNewKey();
 /**
  * Returns the first button found to be pressed.
  * Priority is given to row 1, column 1, and row is prioritized above column.

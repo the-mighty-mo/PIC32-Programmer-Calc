@@ -1,4 +1,7 @@
-#include "input/keypad.h"
+#include "peripherals/keypad.h"
+
+static int8_t key = -1;
+static int8_t last_key = -1;
 
 void Keypad_Init()
 {
@@ -75,11 +78,12 @@ static uint8_t GetRow(uint8_t cols)
 	return retval;
 }
 
-int8_t Keypad_GetKey()
+void Keypad_Process()
 {
 	uint8_t const row = GetRow(0xF);
 	if (!row) {
-		return -1;
+		key = -1;
+		return;
 	}
 
 	uint8_t active_cols = 0xF;
@@ -97,8 +101,20 @@ int8_t Keypad_GetKey()
 			active_cols >>= 1;
 			++col;
 		}
-		return keys[row - 1][col - 1];
+		key = keys[row - 1][col - 1];
 	} else {
-		return -1;
+		key = -1;
 	}
+}
+
+uint8_t Keypad_IsNewKey()
+{
+	uint8_t const new_key = key != last_key;
+	last_key = key;
+	return new_key;
+}
+
+int8_t Keypad_GetKey()
+{
+	return key;
 }

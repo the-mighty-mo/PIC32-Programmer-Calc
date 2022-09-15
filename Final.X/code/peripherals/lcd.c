@@ -24,9 +24,50 @@
 #include <xc.h>
 #include <sys/attribs.h>
 #include <string.h>
-#include "lcd.h"
+#include "peripherals/lcd.h"
 #include "utils.h"
 /* ************************************************************************** */
+
+/* ------------------------------------------------------------ */
+/***	LCD_ConfigurePins
+**
+**	Parameters:
+**		
+**
+**	Return Value:
+**		
+**
+**	Description:
+**		This function configures the digital pins involved in the LCD module: 
+**      The following digital pins are configured as digital outputs: LCD_DISP_RS, LCD_DISP_RW, LCD_DISP_EN
+**      The following digital pins are configured as digital inputs: LCD_DISP_RS.
+**      The function uses pin related definitions from config.h file.
+**      This is a low-level function called by LCD_Init(), so user should avoid calling it directly.
+**      
+**          
+*/
+static void LCD_ConfigurePins()
+{
+    // set control pins as digital outputs.
+    tris_LCD_DISP_RS = 0;
+    tris_LCD_DISP_RW = 0;
+    tris_LCD_DISP_EN = 0;
+    
+    // disable analog (set pins as digital))
+    ansel_LCD_DISP_RS = 0;
+    
+    // default (IO) function for remapable pins
+    rp_LCD_DISP_RS = 0;
+    rp_LCD_DISP_RW = 0;
+    rp_LCD_DISP_EN = 0;
+    
+    // make data pins digital (disable analog)
+    ansel_LCD_DB2 = 0;
+    ansel_LCD_DB4 = 0;
+    ansel_LCD_DB5 = 0;
+    ansel_LCD_DB6 = 0;
+    ansel_LCD_DB7 = 0;
+}
 
 /* ------------------------------------------------------------ */
 /***	LCD_Init
@@ -48,47 +89,6 @@ void LCD_Init()
 {
     LCD_ConfigurePins();
     LCD_InitSequence(displaySetOptionDisplayOn);
-}
-
-/* ------------------------------------------------------------ */
-/***	LCD_ConfigurePins
-**
-**	Parameters:
-**		
-**
-**	Return Value:
-**		
-**
-**	Description:
-**		This function configures the digital pins involved in the LCD module: 
-**      The following digital pins are configured as digital outputs: LCD_DISP_RS, LCD_DISP_RW, LCD_DISP_EN
-**      The following digital pins are configured as digital inputs: LCD_DISP_RS.
-**      The function uses pin related definitions from config.h file.
-**      This is a low-level function called by LCD_Init(), so user should avoid calling it directly.
-**      
-**          
-*/
-void LCD_ConfigurePins()
-{
-    // set control pins as digital outputs.
-    tris_LCD_DISP_RS = 0;
-    tris_LCD_DISP_RW = 0;
-    tris_LCD_DISP_EN = 0;
-    
-    // disable analog (set pins as digital))
-    ansel_LCD_DISP_RS = 0;
-    
-    // default (IO) function for remapable pins
-    rp_LCD_DISP_RS = 0;
-    rp_LCD_DISP_RW = 0;
-    rp_LCD_DISP_EN = 0;
-    
-    // make data pins digital (disable analog)
-    ansel_LCD_DB2 = 0;
-    ansel_LCD_DB4 = 0;
-    ansel_LCD_DB5 = 0;
-    ansel_LCD_DB6 = 0;
-    ansel_LCD_DB7 = 0;
 }
 
 /* ------------------------------------------------------------ */

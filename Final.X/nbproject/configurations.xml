@@ -5,11 +5,13 @@
                    displayName="Header Files"
                    projectFiles="true">
       <logicalFolder name="code" displayName="code" projectFiles="true">
-        <logicalFolder name="input" displayName="input" projectFiles="true">
-          <itemPath>code/input/input.h</itemPath>
-          <itemPath>code/input/keypad.h</itemPath>
+        <logicalFolder name="peripherals" displayName="peripherals" projectFiles="true">
+          <itemPath>code/peripherals/btn.h</itemPath>
+          <itemPath>code/peripherals/keypad.h</itemPath>
+          <itemPath>code/peripherals/lcd.h</itemPath>
+          <itemPath>code/peripherals/led.h</itemPath>
+          <itemPath>code/peripherals/swt.h</itemPath>
         </logicalFolder>
-        <itemPath>code/lcd.h</itemPath>
         <itemPath>code/utils.h</itemPath>
         <itemPath>code/config.h</itemPath>
       </logicalFolder>
@@ -22,11 +24,13 @@
                    displayName="Source Files"
                    projectFiles="true">
       <logicalFolder name="code" displayName="code" projectFiles="true">
-        <logicalFolder name="input" displayName="input" projectFiles="true">
-          <itemPath>code/input/input.c</itemPath>
-          <itemPath>code/input/keypad.c</itemPath>
+        <logicalFolder name="peripherals" displayName="peripherals" projectFiles="true">
+          <itemPath>code/peripherals/btn.c</itemPath>
+          <itemPath>code/peripherals/keypad.c</itemPath>
+          <itemPath>code/peripherals/lcd.c</itemPath>
+          <itemPath>code/peripherals/led.c</itemPath>
+          <itemPath>code/peripherals/swt.c</itemPath>
         </logicalFolder>
-        <itemPath>code/lcd.c</itemPath>
         <itemPath>code/utils.c</itemPath>
         <itemPath>code/main.c</itemPath>
       </logicalFolder>
@@ -1409,6 +1413,7 @@
         <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="lastid" value=""/>
         <property key="memories.bootflash" value="true"/>
         <property key="memories.configurationmemory" value="true"/>

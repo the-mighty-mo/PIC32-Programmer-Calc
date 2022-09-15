@@ -84,7 +84,6 @@ void LCD_WriteByte(unsigned char bData);
 void LCD_SetWriteCgramPosition(unsigned char bAdr);
 void LCD_WriteCommand(unsigned char bCmd);
 void LCD_WriteDataByte(unsigned char bData);
-void LCD_ConfigurePins();
 
 /* *****************************************************************************
  End of File
