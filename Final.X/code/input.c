@@ -2,8 +2,10 @@
 #include "peripherals/btn.h"
 #include "peripherals/keypad.h"
 #include "peripherals/lcd.h"
+#include "peripherals/led.h"
 #include "peripherals/rgbled.h"
 #include "utils.h"
+#include "peripherals/swt.h"
 #include <string.h>
 
 static uint16_t nums[2];
@@ -32,7 +34,7 @@ static uint8_t last_btn;
 #define GET_BTN(mask) ((btn & mask) && !(last_btn & mask))
 
 static char lcd[2][17];
-static char const operators[] = {'+', '-', '*', '/', '&', '|', '^', '~'};
+static char const operators[] = {'+', '-', '*', '/', '&', '|', '^'};
 
 static void UpdateBase(void);
 static void NumToStr(uint16_t num, char *str, size_t strlen);
@@ -77,6 +79,20 @@ void Input_Process(void)
 {
 	last_btn = btn;
 	btn = BTN_GetGroupValue();
+
+	uint8_t const swt = SWT_GetGroupValue();
+	if ((swt & (swt - 1)) == 0) {
+		// only one switch is set, set operation
+		for (int i = 0; i < sizeof(operators) / sizeof(*operators); ++i) {
+			if (swt & (1 << i)) {
+				operator = i;
+				lcd[1][0] = operators[operator];
+				LCD_WriteStringAtPos(lcd[1], 1, 0);
+				break;
+			}
+		}
+	}
+	LED_SetGroupValue(1 << operator);
 
 	if (GET_BTN(BTN_U_MASK)) {
 		if (++num_base > Hex) {

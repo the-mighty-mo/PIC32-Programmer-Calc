@@ -3,16 +3,21 @@
 #include "peripherals/keypad.h"
 #include "peripherals/swt.h"
 #include "peripherals/lcd.h"
+#include "peripherals/led.h"
 #include "peripherals/rgbled.h"
 #include "input.h"
 #include "utils.h"
 
 static void App_Init()
 {
+	// JTAG conflicts with LEDs
+	CFGCONbits.JTAGEN = 0;
+
 	BTN_Init();
 	Keypad_Init();
 	SWT_Init();
 	LCD_Init();
+	LED_Init();
 	RGBLED_Init();
 	Input_Init();
 }
