@@ -82,7 +82,7 @@ void Input_Init(void)
 	last_swt = 0;
 	
 	ClearLcd();
-	UpdateSevenSeg();
+//	UpdateSevenSeg();
 }
 
 void Input_Process(void)
@@ -214,7 +214,7 @@ static void UpdateBase(void)
 		RGBLED_SetValue(0, 0, 0);
 	}
 	
-	UpdateSevenSeg();
+//	UpdateSevenSeg();
 }
 
 static void RunOp(void)
@@ -285,9 +285,11 @@ static void BinToStr(uint16_t bin, char *str, size_t strlen)
 static void DecToStr(uint16_t dec, char *str, size_t strlen)
 {
 	memset(str, ' ', strlen);
+	str[0] = '0';
+	str[1] = 'd';
 	for (int i = 0; i < 5; ++i) {
 		uint8_t const dec_digit = dec % 10;
-		str[5 - i - 1] = '0' + dec_digit;
+		str[7 - i - 1] = '0' + dec_digit;
 		dec /= 10;
 		
 		if (!dec) {
@@ -299,12 +301,14 @@ static void DecToStr(uint16_t dec, char *str, size_t strlen)
 static void HexToStr(uint16_t hex, char *str, size_t strlen)
 {
 	memset(str, ' ', strlen);
+	str[0] = '0';
+	str[1] = 'x';
 	for (int i = 0; i < 4; ++i) {
 		uint8_t const hex_digit = hex & 0xF;
 		if (hex_digit >= 0xA) {
-			str[4 - i - 1] = 'A' + hex_digit - 0xA;
+			str[6 - i - 1] = 'A' + hex_digit - 0xA;
 		} else {
-			str[4 - i - 1] = '0' + hex_digit;
+			str[6 - i - 1] = '0' + hex_digit;
 		}
 		hex >>= 4;
 		

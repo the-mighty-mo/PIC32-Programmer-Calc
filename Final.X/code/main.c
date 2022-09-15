@@ -34,7 +34,7 @@ static void App_Init()
 	SWT_Init();
 	LCD_Init();
 	LED_Init();
-	SevenSeg_Init();
+//	SevenSeg_Init();
 	RGBLED_Init();
 	Input_Init();
 }
