@@ -29,6 +29,8 @@
 #include <sys/attribs.h>
 #include "config.h"
 #include "peripherals/sevenseg.h"
+#include "utils.h"
+#include "lcd.h"
 
 
 /* ************************************************************************** */
@@ -63,8 +65,8 @@ static unsigned char const digitSegments[]= {
 };
 
 #define NO_DIGITS sizeof(digitSegments)/sizeof(digitSegments[0])
-static unsigned char digits[4];
-#define TMR_TIME    0.0001 // 100 us for each tick
+static volatile unsigned char digits[4];
+#define TMR_TIME    0.005 // 5000 us for each tick
 
 /***	Timer1ISR
 **
@@ -77,17 +79,23 @@ static unsigned char digits[4];
 **          
 */
 void __ISR(_TIMER_1_VECTOR, ipl7) Timer1ISR(void) 
-{  
+{
     static unsigned char idxCurrDigit = 0;
     unsigned char currDigit, idx;
 
-    idx = (idxCurrDigit++) & 3;
+    idx = idxCurrDigit++;
+	if (idxCurrDigit > 3) {
+		idxCurrDigit = 0;
+	}
     currDigit = digits[idx];
-//     1. deactivate all digits (anodes)
+	
+	// 1. deactivate all digits (anodes)
     lat_SSD_AN1 = 1; // deactivate digit 1;
     lat_SSD_AN2 = 1; // deactivate digit 2;    
     lat_SSD_AN3 = 1; // deactivate digit 3;   
     lat_SSD_AN0 = 1; // deactivate digit 0;
+	
+	DelayAprox100Us(10);
     
     // 2. drive all the segments (cathodes)
     lat_SSD_CA = currDigit & 0x01;
@@ -97,20 +105,21 @@ void __ISR(_TIMER_1_VECTOR, ipl7) Timer1ISR(void)
     lat_SSD_CE = (currDigit & 0x10) >> 4;
     lat_SSD_CF = (currDigit & 0x20) >> 5;
     lat_SSD_CG = (currDigit & 0x40) >> 6;
-    lat_SSD_DP = (currDigit & 0x80) >> 7;     
+    lat_SSD_DP = (currDigit & 0x80) >> 7;
+	
+	DelayAprox100Us(10);
     
     // 3. activate the current digit (anodes)
     
-    switch(idx)
-    {
+    switch (idx) {
         case 0:
             lat_SSD_AN0 = 0; // activate digit 0;        
             break;
         case 1:
-           lat_SSD_AN1 = 0; // activate digit 1;
+            lat_SSD_AN1 = 0; // activate digit 1;
             break;
         case 2:
-           lat_SSD_AN2 = 0; // activate digit 2;
+            lat_SSD_AN2 = 0; // activate digit 2;
             break;    
         case 3:
             lat_SSD_AN3 = 0; // activate digit 3;   
@@ -130,7 +139,7 @@ void __ISR(_TIMER_1_VECTOR, ipl7) Timer1ISR(void)
 **
 **	Description:
 **		This function configures the Timer1 to be used by SSD module.
-**      The timer will generate interrupts every 3 ms.
+**      The timer will generate interrupts every 5 ms.
 **      The period constant is computed using TMR_TIME definition (located in this source file)
 **      and peripheral bus frequency definition (PB_FRQ, located in config.h).
 **      This is a low-level function called by SSD_Init(), so user should avoid calling it directly. 
@@ -138,17 +147,18 @@ void __ISR(_TIMER_1_VECTOR, ipl7) Timer1ISR(void)
 */
 static void SevenSeg_Timer1Setup()
 {
-  PR1 = (int)(((float)(TMR_TIME * PB_FRQ) / 256) + 0.5); //set period register, generates one interrupt every 100 us
-  TMR1 = 0;                           //    initialize count to 0
-  T1CONbits.TCKPS = 2;                //    1:64 prescale value
-  T1CONbits.TGATE = 0;                //    not gated input (the default)
-  T1CONbits.TCS = 0;                  //    PCBLK input (the default)
-  T1CONbits.ON = 1;                   //    turn on Timer1
-  IPC1bits.T1IP = 7;                  //    priority
-  IPC1bits.T1IS = 3;                  //    subpriority
-  IFS0bits.T1IF = 0;                  //    clear interrupt flag
-  IEC0bits.T1IE = 1;                  //    enable interrupt
-  macro_enable_interrupts();          //    enable interrupts at CPU
+	macro_disable_interrupts();
+	PR1 = (int)(((float)(TMR_TIME * PB_FRQ) / 64) + 0.5); //set period register, generates one interrupt every 5 ms
+	TMR1 = 0;                           //    initialize count to 0
+	T1CONbits.TCKPS = 2;                //    1:64 prescale value
+	T1CONbits.TGATE = 0;                //    not gated input (the default)
+	T1CONbits.TCS = 0;                  //    PCBLK input (the default)
+	T1CONbits.ON = 1;                   //    turn on Timer1
+	IPC1bits.T1IP = 7;                  //    priority
+	IPC1bits.T1IS = 3;                  //    subpriority
+	IFS0bits.T1IF = 0;                  //    clear interrupt flag
+	IEC0bits.T1IE = 1;                  //    enable interrupt
+	macro_enable_interrupts();          //    enable interrupts at CPU
 }
 /* ************************************************************************** */
 /* ************************************************************************** */
@@ -191,6 +201,12 @@ static void SevenSeg_ConfigurePins()
     // disable analog (set pins as digital))    
     ansel_SSD_AN0 = 0;
     ansel_SSD_AN1 = 0;
+
+	// disable anodes
+	lat_SSD_AN0 = 1;
+	lat_SSD_AN1 = 1;
+	lat_SSD_AN2 = 1;
+	lat_SSD_AN3 = 1;
     
     PMCONbits.ON = 0;   // turn PM off
 }
@@ -300,7 +316,7 @@ unsigned char SevenSeg_GetDigitSegments(unsigned char d)
 void SevenSeg_WriteDigits(unsigned char d1, unsigned char d2, unsigned char d3, unsigned char d4, \
         unsigned char dp1, unsigned char dp2, unsigned char dp3, unsigned char dp4)
 {
-      T1CONbits.ON = 0;                   // turn off Timer1
+    T1CONbits.ON = 0;                   // turn off Timer1
     digits[0] = SevenSeg_GetDigitSegments(d1);
     digits[1] = SevenSeg_GetDigitSegments(d2);
     digits[2] = SevenSeg_GetDigitSegments(d3);
@@ -322,7 +338,7 @@ void SevenSeg_WriteDigits(unsigned char d1, unsigned char d2, unsigned char d3, 
     {
         digits[3] |= 0x80;
     }    
-  T1CONbits.ON = 1;                   //  turn on Timer1
+	T1CONbits.ON = 1;                   //  turn on Timer1
 }
 
 /* ------------------------------------------------------------ */

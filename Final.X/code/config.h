@@ -21,7 +21,7 @@ __builtin_enable_interrupts(); }
 
 //#define macro_enable_interrupts INTEnableSystemMultiVectoredInt()
 
-#define macro_disable_interrupts __builtin_disable_interrupts()
+#define macro_disable_interrupts() __builtin_disable_interrupts()
 //#define macro_disable_interrupts INTDisableInterrupts()
 
 
