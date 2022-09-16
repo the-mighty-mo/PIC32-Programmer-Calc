@@ -69,15 +69,15 @@ static void ResetNums(void)
 /** Clears the LCD output. */
 static void ClearLcd(void)
 {
-	// First line: first operand
+	// first line: first operand
 	NumToStr(nums[0], lcd[0] + 1, sizeof(lcd[0]) - 2);
 	lcd[0][0] = ' ';
 
-	// Second line: operator and spaces
+	// second line: operator and spaces
 	memset(lcd[1], ' ', sizeof(lcd[1]) - 1);
 	lcd[1][0] = operators[operator];
 
-	// Signal that we need to write to the LCD
+	// signal that we need to write to the LCD
 	update_lcd[0] = 1;
 	update_lcd[1] = 1;
 }
@@ -92,13 +92,13 @@ static void ClearRgb(void)
 
 void Calculator_Init(void)
 {
-	// Reset the operands and operator
+	// reset the operands and operator
 	ResetNums();
 	num_base = Hex;
 	operator = Add;
-	// Clear the LCD display
+	// clear the LCD display
 	ClearLcd();
-	// Clear the RGB LED
+	// clear the RGB LED
 	ClearRgb();
 }
 
@@ -122,24 +122,24 @@ static void ProcessOperator(void)
 			}
 		}
 	}
-	// Set the LED of the active operator
+	// set the LED of the active operator
 	LED_SetGroupValue(1 << operator);
 }
 
 /** Updates the numerical base on the LCD display. */
-static void UpdateBase(void)
+static void UpdateBaseLcd(void)
 {
-	// Update the LCD string to reflect the new base
+	// update the LCD string to reflect the new base
 	NumToStr(nums[0], lcd[0] + 1, sizeof(lcd[0]) - 2);
 	update_lcd[0] = 1;
 
-	// Also update the second operand if we're on it
+	// also update the second operand if we're on it
 	if (num_idx) {
 		NumToStr(nums[1], lcd[1] + 1, sizeof(lcd[1]) - 2);
 		update_lcd[1] = 1;
 	}
 
-	// Update the RGB LED for the current operand
+	// update the RGB LED for the current operand
 	UpdateNumRgbLed();
 }
 
@@ -149,15 +149,21 @@ static void UpdateBase(void)
 static void ProcessNumBase(void)
 {
 	if (Input_GetNewBtn(BTN_U_BIT)) {
+		// user wants to go up a base
 		if (++num_base > Hex) {
+			// wrap to binary
 			num_base = Bin;
 		}
-		UpdateBase();
+		// update the base on the LCD
+		UpdateBaseLcd();
 	} else if (Input_GetNewBtn(BTN_D_BIT)) {
+		// user wants to go up a base
 		if (num_base-- == 0) {
+			// wrap to hex
 			num_base = Hex;
 		}
-		UpdateBase();
+		// update the base on the LCD
+		UpdateBaseLcd();
 	}
 }
 
@@ -167,10 +173,13 @@ static void ProcessNumBase(void)
 static void ProcessClearBackspace(void)
 {
 	if (Input_GetNewBtn(BTN_R_BIT)) {
+		// user wants to clear the input
 		if (nums[num_idx] != 0) {
+			// clear the current operand
 			nums[num_idx] = 0;
 			UpdateNumLcd();
 		} else if (num_idx > 0) {
+			// current operand is 0, clear all operands
 			ResetNums();
 			ClearLcd();
 		}
@@ -194,30 +203,30 @@ static void ProcessClearBackspace(void)
 
 void Calculator_Process(void)
 {
-	// Process changes to the operator, numerical base, or clear/backspace
+	// process changes to the operator, numerical base, or clear/backspace
 	ProcessOperator();
 	ProcessNumBase();
 	ProcessClearBackspace();
 
-	// Process new input
+	// process new input
 	if (Input_GetNewBtn(BTN_C_BIT)) {
-		// User submitted an operand
+		// user submitted an operand
 		if (num_idx == 0) {
-			// User submitted first operand, switch to second and update LCD
+			// user submitted first operand, switch to second and update LCD
 			++num_idx;
 			UpdateNumLcd();
 
 			// disable red LED for last result, user wants to use what's left
 			rgb_is_red.fields.result = 0;
 		} else {
-			// User submitted second operand, run the operation
+			// user submitted second operand, run the operation
 			RunOp();
 		}
 	} else if (Input_IsNewKey()) {
-		// User submitted another digit
+		// user submitted another digit
 		int8_t const key = Input_GetKey();
 		if (key >= 0) {
-			// Valid key, update the current operand
+			// valid key, update the current operand
 			UpdateNum(key);
 
 			// disable red LED for last result, user wants to use what's left
@@ -225,16 +234,18 @@ void Calculator_Process(void)
 		}
 	}
 
-	// Update the LCD output
+	// update the LCD output
 	for (int i = 0; i < sizeof(update_lcd) / sizeof(*update_lcd); ++i) {
 		if (update_lcd[i]) {
+			// update this line of the LCD
 			LCD_WriteStringAtPos(lcd[i], i, 0);
 		}
 	}
 
-	// Update the RGB LED
+	// update the RGB LED
 	uint8_t const is_red = !!(rgb_is_red.is_red);
 	if (is_red != last_rgb_is_red) {
+		// state changed, update RGB LED
 		RGBLED_SetValue(0x1F * is_red, 0, 0);
 	}
 	last_rgb_is_red = is_red;
@@ -259,6 +270,7 @@ static void RunOp(void)
 			num = nums[0] * nums[1];
 			break;
 		case Div:
+			// check for divide by 0
 			if (nums[1] == 0) {
 				div_0_err = 1;
 			} else {
@@ -276,16 +288,21 @@ static void RunOp(void)
 			break;
 	}
 
+	// reset operands and clear screen
 	ResetNums();
 	ClearLcd();
 
+	// set LCD output
 	if (div_0_err) {
+		// output an error to the LCD
 		strcpy(lcd[0], "Err: div by 0");
-		LCD_WriteStringAtPos(lcd[0], 0, 0);
+		update_lcd[0] = 1;
 	} else {
+		// output the result to the LCD
 		nums[0] = num;
 		UpdateNumLcd();
-		
+
+		// set the RGB LED to red if there was overflow
 		if (num > 0xFFFF || (num_base == Bin && (num & 0x8000))) {
 			rgb_is_red.fields.result = 1;
 		} else {
@@ -341,7 +358,9 @@ static void UpdateNum(uint8_t key)
 /** Updates the current operand on the LCD. */
 static void UpdateNumLcd(void)
 {
+	// convert the operand to a string
 	NumToStr(nums[num_idx], lcd[num_idx] + 1, sizeof(lcd[num_idx]) - 2);
+	// signal that we want to update this line of the LCD
 	update_lcd[num_idx] = 1;
 }
 
