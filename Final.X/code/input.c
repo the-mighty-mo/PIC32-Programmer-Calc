@@ -14,6 +14,12 @@ static uint8_t last_swt;
 
 void Input_Init(void)
 {
+	// init necessary peripherals
+	BTN_Init();
+	Keypad_Init();
+	SWT_Init();
+
+	// -1 is no key, 0 is no buttons/switches
 	key = -1;
 	last_key = -1;
 	
@@ -26,6 +32,11 @@ void Input_Init(void)
 
 void Input_Process(void)
 {
+	// update the previously read key/btn/swt
+	last_key = key;
+	last_btn = btn;
+	last_swt = swt;
+	// fetch the current key/btn/swt
 	key = Keypad_GetKey();
 	btn = BTN_GetGroupValue();
 	swt = SWT_GetGroupValue();
@@ -33,9 +44,7 @@ void Input_Process(void)
 
 uint8_t Input_IsNewKey(void)
 {
-	uint8_t const new = key != last_key;
-	last_key = key;
-	return new;
+	return key != last_key;
 }
 uint8_t Input_GetKey(void)
 {
@@ -44,21 +53,18 @@ uint8_t Input_GetKey(void)
 
 uint8_t Input_GetBtn(uint8_t btn_num)
 {
+	// return whether the given button is pressed by applying a mask
 	return !!(btn & (1 << btn_num));
 }
 uint8_t Input_GetNewBtn(uint8_t btn_num)
 {
 	uint8_t const mask = 1 << btn_num;
-	uint8_t const new = (btn & mask) && !(last_btn & mask);
-	last_btn &= ~mask;
-	last_btn |= btn & mask;
-	return new;
+	// return whether the given button is pressed AND last was not
+	return (btn & mask) && !(last_btn & mask);
 }
 uint8_t Input_IsNewBtnGroup(void)
 {
-	uint8_t const new = btn != last_btn;
-	last_btn = btn;
-	return new;
+	return btn != last_btn;
 }
 uint8_t Input_GetBtnGroup(void)
 {
@@ -67,21 +73,18 @@ uint8_t Input_GetBtnGroup(void)
 
 uint8_t Input_GetSwt(uint8_t swt_num)
 {
+	// return whether the given switch is toggled by applying a mask
 	return !!(swt & (1 << swt_num));
 }
 uint8_t Input_GetNewSwt(uint8_t swt_num)
 {
 	uint8_t const mask = 1 << swt_num;
-	uint8_t const new = (swt & mask) && !(last_swt & mask);
-	last_swt &= ~mask;
-	last_swt |= swt & mask;
-	return new;
+	// return whether the given switch is toggled AND last was not
+	return (swt & mask) && !(last_swt & mask);
 }
 uint8_t Input_IsNewSwtGroup(void)
 {
-	uint8_t const new = swt != last_swt;
-	last_swt = swt;
-	return new;
+	return swt != last_swt;
 }
 uint8_t Input_GetSwtGroup(void)
 {

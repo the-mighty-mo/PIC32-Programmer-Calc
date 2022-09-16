@@ -15,7 +15,7 @@ static enum NumBase {
 	Dec,
 	Hex
 } num_base;
-static uint8_t bases[] = {2, 10, 16};
+static uint8_t const bases[] = {2, 10, 16};
 
 static enum Operator {
 	Add,
@@ -50,7 +50,7 @@ static void ClearLcd(void)
 	lcd[0][sizeof(lcd[0]) - 1] = '\0';
 	memset(lcd[1], ' ', sizeof(lcd[1]) - 1);
 	lcd[1][sizeof(lcd[1]) - 1] = '\0';
-	
+
 	NumToStr(nums[0], lcd[0] + 1, sizeof(lcd[0]) - 2);
 	lcd[1][0] = operators[operator];
 
@@ -127,7 +127,7 @@ static void UpdateNum(uint8_t key)
 {
 	switch (num_base) {
 		case Bin:
-			if (key <= 0b1 && !(nums[num_idx] & 0x4000)) {
+			if (key <= 0b1 && !(nums[num_idx] & 0xC000)) {
 				nums[num_idx] <<= 1;
 				nums[num_idx] += key;
 				UpdateLcd();
@@ -231,10 +231,11 @@ static void RunOp(void)
 
 static void BinToStr(uint16_t bin, char *str, size_t strlen)
 {
+	size_t const max_len = strlen < 16 ? strlen : 15;
 	memset(str, ' ', strlen);
-	for (int i = 0; i < 15; ++i) {
+	for (int i = 0; i < max_len; ++i) {
 		uint8_t const bin_digit = bin & 0x1;
-		str[15 - i - 1] = '0' + bin_digit;
+		str[max_len - i - 1] = '0' + bin_digit;
 		bin >>= 1;
 		
 		if (!bin) {
@@ -245,12 +246,13 @@ static void BinToStr(uint16_t bin, char *str, size_t strlen)
 
 static void DecToStr(uint16_t dec, char *str, size_t strlen)
 {
+	size_t const max_len = strlen < 7 ? strlen : 7;
 	memset(str, ' ', strlen);
 	str[0] = '0';
 	str[1] = 'd';
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < max_len - 2; ++i) {
 		uint8_t const dec_digit = dec % 10;
-		str[7 - i - 1] = '0' + dec_digit;
+		str[max_len - i - 1] = '0' + dec_digit;
 		dec /= 10;
 		
 		if (!dec) {
@@ -261,15 +263,16 @@ static void DecToStr(uint16_t dec, char *str, size_t strlen)
 
 static void HexToStr(uint16_t hex, char *str, size_t strlen)
 {
+	size_t const max_len = strlen < 6 ? strlen : 6;
 	memset(str, ' ', strlen);
 	str[0] = '0';
 	str[1] = 'x';
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < max_len - 2; ++i) {
 		uint8_t const hex_digit = hex & 0xF;
 		if (hex_digit >= 0xA) {
-			str[6 - i - 1] = 'A' + hex_digit - 0xA;
+			str[max_len - i - 1] = 'A' + hex_digit - 0xA;
 		} else {
-			str[6 - i - 1] = '0' + hex_digit;
+			str[max_len - i - 1] = '0' + hex_digit;
 		}
 		hex >>= 4;
 		
@@ -281,6 +284,7 @@ static void HexToStr(uint16_t hex, char *str, size_t strlen)
 
 static void NumToStr(uint16_t num, char *str, size_t strlen)
 {
+	if (strlen < 2) return;
 	switch (num_base) {
 		case Bin:
 			BinToStr(num, str, strlen);

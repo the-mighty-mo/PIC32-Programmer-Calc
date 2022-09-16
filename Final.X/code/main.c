@@ -17,9 +17,6 @@
 #pragma config JTAGEN = OFF             // JTAG Enable (JTAG Disabled)
 
 #include "config.h"
-#include "peripherals/btn.h"
-#include "peripherals/keypad.h"
-#include "peripherals/swt.h"
 #include "peripherals/lcd.h"
 #include "peripherals/led.h"
 #include "peripherals/rgbled.h"
@@ -27,12 +24,10 @@
 #include "input.h"
 #include "utils.h"
 
+/** Function to initialize all the program modules. Call this once on reset. */
 static void App_Init()
 {
 	// Initialize all the peripherals
-	BTN_Init();
-	Keypad_Init();
-	SWT_Init();
 	LCD_Init();
 	LED_Init();
 	RGBLED_Init();
@@ -42,6 +37,7 @@ static void App_Init()
 	Calculator_Init();
 }
 
+/** Function to process all the program modules. Call this in a loop. */
 static void App_Process()
 {
 	// Process inputs
