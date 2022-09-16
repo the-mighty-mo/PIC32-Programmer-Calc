@@ -11,6 +11,9 @@
 static uint16_t nums[2];
 static uint8_t num_idx;
 
+// Stores whether the last result was an error
+static uint8_t is_err;
+
 // Numerical base
 static enum NumBase {
 	Bin,
@@ -63,6 +66,7 @@ static void ResetNums(void)
 {
 	memset(nums, 0, sizeof(nums));
 	num_idx = 0;
+	is_err = 0;
 	memset(&rgb_is_red, 0, sizeof(rgb_is_red));
 }
 
@@ -178,16 +182,16 @@ static void ProcessClearBackspace(void)
 			// clear the current operand
 			nums[num_idx] = 0;
 			UpdateNumLcd();
-		} else if (num_idx > 0) {
-			// current operand is 0, clear all operands
+
+			// update the RGB LED for the current operand
+			UpdateNumRgbLed();
+			// disable red LED for last result, user wants to use what's left
+			rgb_is_red.fields.result = 0;
+		} else {
+			// clear all operands
 			ResetNums();
 			ClearLcd();
 		}
-
-		// update the RGB LED for the current operand
-		UpdateNumRgbLed();
-		// disable red LED for last result, user wants to use what's left
-		rgb_is_red.fields.result = 0;
 	} else if (Input_GetNewBtn(BTN_L_BIT) && nums[num_idx]) {
 		// shift out the most recent digit (least significant))
 		nums[num_idx] /= bases[num_base];
@@ -201,10 +205,40 @@ static void ProcessClearBackspace(void)
 	}
 }
 
-void Calculator_Process(void)
+/** Checks for the clear button to clear the current error. */
+static uint8_t CheckForClear(void)
 {
-	// process changes to the operator, numerical base, or clear/backspace
+	if (Input_GetNewBtn(BTN_R_BIT)) {
+		// clear the error status
+		is_err = 0;
+
+		// reset the operands and clear the screen
+		ResetNums();
+		ClearLcd();
+
+		// signal that we cleared
+		return 1;
+	} else {
+		// did not clear
+		return 0;
+	}
+}
+
+/** Processes the main logic of the calculator module. */
+static void Calculator_Process_Logic(void)
+{
+	// process changes to the operator
 	ProcessOperator();
+
+	if (is_err) {
+		// last operation was an error, check for clear
+		if (!CheckForClear()) {
+			// user hasn't cleared yet, leave early
+			return;
+		}
+	}
+
+	// process changes to the numerical base or clear/backspace
 	ProcessNumBase();
 	ProcessClearBackspace();
 
@@ -233,7 +267,11 @@ void Calculator_Process(void)
 			rgb_is_red.fields.result = 0;
 		}
 	}
+}
 
+/** Processes the output of the calculator module. */
+static void Calculator_Process_Output(void)
+{
 	// update the LCD output
 	for (int i = 0; i < sizeof(update_lcd) / sizeof(*update_lcd); ++i) {
 		if (update_lcd[i]) {
@@ -249,6 +287,14 @@ void Calculator_Process(void)
 		RGBLED_SetValue(0x1F * is_red, 0, 0);
 	}
 	last_rgb_is_red = is_red;
+}
+
+void Calculator_Process(void)
+{
+	// process user input and logic
+	Calculator_Process_Logic();
+	// process the output
+	Calculator_Process_Output();
 }
 
 /**
@@ -297,6 +343,8 @@ static void RunOp(void)
 		// output an error to the LCD
 		strcpy(lcd[0], "Err: div by 0");
 		update_lcd[0] = 1;
+		// signal an error
+		is_err = 1;
 	} else {
 		// output the result to the LCD
 		nums[0] = num;
