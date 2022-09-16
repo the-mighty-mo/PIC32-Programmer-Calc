@@ -67,6 +67,7 @@ static uint8_t GetRow(uint8_t cols)
 		retval = 0;
 	}
 
+	/* disable all columns */
 	KEYPAD_COL1 = 1;
 	KEYPAD_COL2 = 1;
 	KEYPAD_COL3 = 1;
@@ -77,28 +78,38 @@ static uint8_t GetRow(uint8_t cols)
 
 int8_t Keypad_GetKey(void)
 {
+	/* get the first active row with all columns active */
 	uint8_t const row = GetRow(0xF);
 	if (!row) {
+		/* no buttons pressed */
 		return -1;
 	}
 
+	/* find the columns with buttons pressed on the discovered row ("active" columns) */
 	uint8_t active_cols = 0xF;
 	for (int i = 0; i < 4; ++i) {
+		/* check all columns except for i */
 		uint8_t const cols = active_cols & ~(1 << i);
+		/* get the first active row with the set columns */
 		uint8_t const cols_row = GetRow(cols);
 		if (cols_row == row) {
+			/* button i is not pressed, remove it from active_cols */
 			active_cols = cols;
 		}
 	}
 
+	/* check if there are any active columns for the row */
 	if (active_cols) {
+		/* find the leftmost active column (least significant bit) */
 		uint8_t col = 1;
 		while (!(active_cols & 1)) {
 			active_cols >>= 1;
 			++col;
 		}
+		/* return the key for the row and column; row and column starts at 1 */
 		return keys[row - 1][col - 1];
 	} else {
+		/* this shouldn't be possible; no active columns */
 		return -1;
 	}
 }

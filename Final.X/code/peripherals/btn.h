@@ -21,6 +21,7 @@ void BTN_Init();
 unsigned char BTN_GetValue(unsigned char btn);
 unsigned char BTN_GetGroupValue();
 
+// Button defines
 #define BTN_U_BIT 0
 #define BTN_U_MASK (1 << BTN_U_BIT)
 #define BTN_L_BIT 1
