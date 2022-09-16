@@ -1,3 +1,10 @@
+/*
+ * Module to run the programmer calculator.
+ *
+ * Author: Benjamin Hall
+ * Date: 2022 September 16
+ */
+
 #include "calculator.h"
 #include "peripherals/btn.h"
 #include "peripherals/lcd.h"

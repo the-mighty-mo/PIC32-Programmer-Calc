@@ -1,3 +1,10 @@
+/*
+ * Module to handle user input.
+ *
+ * Author: Benjamin Hall
+ * Date: 2022 September 16
+ */
+
 #pragma once
 
 #include <stdint.h>

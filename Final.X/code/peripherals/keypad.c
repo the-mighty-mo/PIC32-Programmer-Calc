@@ -1,3 +1,10 @@
+/*
+ * Module for the PmodKYPD peripheral.
+ *
+ * Author: Benjamin Hall
+ * Date: 2022 September 16
+ */
+
 #include "peripherals/keypad.h"
 
 void Keypad_Init(void)

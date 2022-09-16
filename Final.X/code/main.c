@@ -1,3 +1,10 @@
+/*
+ * PIC32 Programmer Calculator
+ *
+ * Author: Benjamin Hall
+ * Date: 2022 September 16
+ */
+
 // PIC32MX370F512L Configuration Bit Settings
 
 // DEVCFG2
