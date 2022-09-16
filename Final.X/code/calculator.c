@@ -16,7 +16,8 @@
 
 // Operands
 static uint16_t nums[2];
-static uint8_t num_idx;
+static uint8_t num_updated[2];
+static uint8_t num_idx = 0;
 
 // Stores whether the last result was an error
 static uint8_t is_err;
@@ -40,7 +41,7 @@ static enum Operator {
 	Xor
 } operator;
 
-// operator characters for LCD
+// operator characters for display
 static char const operators[] = {'+', '-', '*', '/', '&', '|', '^'};
 
 // RGBLED output
@@ -59,16 +60,17 @@ static union {
 } overflow_stat = {0};
 
 // Private functions
+static void ProcessKey(uint8_t key);
 static void RunOp(void);
-static void UpdateNum(uint8_t key);
-static void UpdateNumLcd(void);
 static void UpdateOvfStats(void);
+static void WriteNumLcd(uint8_t idx);
 static void NumToStr(uint16_t num, char *str, size_t strlen);
 
 /** Resets the operands and operator. */
 static void ResetNums(void)
 {
 	memset(nums, 0, sizeof(nums));
+	memset(num_updated, 0, sizeof(num_updated));
 	num_idx = 0;
 	is_err = 0;
 	memset(&overflow_stat, 0, sizeof(overflow_stat));
@@ -128,20 +130,14 @@ static void ProcessOperator(void)
 	LED_SetGroupValue(1 << operator);
 }
 
-/** Updates the numerical base on the LCD display. */
-static void UpdateBaseLcd(void)
+/** Updates the numerical base used for output. */
+static void UpdateNumBase(void)
 {
-	char *lcd = Output_GetLcdBuffer(0);
-
-	// update the LCD string to reflect the new base
-	NumToStr(nums[0], lcd + 1, LCD_BUFFER_STRLEN - 1);
-	Output_SignalLcdUpdate(0);
-
-	// also update the second operand if we're on it
+	// signal that we need to update the displayed number
+	num_updated[0] = 1;
+	// also signal to update the second operand if we're on it
 	if (num_idx) {
-		lcd = Output_GetLcdBuffer(1);
-		NumToStr(nums[1], lcd + 1, LCD_BUFFER_STRLEN - 1);
-		Output_SignalLcdUpdate(1);
+		num_updated[1] = 1;
 	}
 
 	// update the overflow status for the current operand
@@ -159,16 +155,16 @@ static void ProcessNumBase(void)
 			// wrap to binary
 			num_base = Bin;
 		}
-		// update the base on the LCD
-		UpdateBaseLcd();
+		// update the base used for output
+		UpdateNumBase();
 	} else if (Input_GetNewBtn(BTN_D_BIT)) {
 		// user wants to go up a base
 		if (num_base-- == 0) {
 			// wrap to hex
 			num_base = Hex;
 		}
-		// update the base on the LCD
-		UpdateBaseLcd();
+		// update the base used for output
+		UpdateNumBase();
 	}
 }
 
@@ -182,7 +178,7 @@ static void ProcessClearBackspace(void)
 		if (nums[num_idx] != 0) {
 			// clear the current operand
 			nums[num_idx] = 0;
-			UpdateNumLcd();
+			num_updated[num_idx] = 1;
 
 			// update the overflow status for the current operand
 			UpdateOvfStats();
@@ -196,8 +192,8 @@ static void ProcessClearBackspace(void)
 	} else if (Input_GetNewBtn(BTN_L_BIT) && nums[num_idx]) {
 		// shift out the most recent digit (least significant))
 		nums[num_idx] /= bases[num_base];
-		// update the num LCD
-		UpdateNumLcd();
+		// signal to update the num output
+		num_updated[num_idx] = 1;
 
 		// update the overflow status for the current operand
 		UpdateOvfStats();
@@ -246,9 +242,9 @@ void Calculator_Process(void)
 	if (Input_GetNewBtn(BTN_C_BIT)) {
 		// user submitted an operand
 		if (num_idx == 0) {
-			// user submitted first operand, switch to second and update LCD
+			// user submitted first operand, switch to second and update output
 			++num_idx;
-			UpdateNumLcd();
+			num_updated[num_idx] = 1;
 
 			// disable red LED for last result, user wants to use what's left
 			overflow_stat.fields.result = 0;
@@ -261,16 +257,68 @@ void Calculator_Process(void)
 		int8_t const key = Input_GetKey();
 		if (key >= 0) {
 			// valid key, update the current operand
-			UpdateNum(key);
+			ProcessKey(key);
 
 			// disable red LED for last result, user wants to use what's left
 			overflow_stat.fields.result = 0;
 		}
 	}
 
+	// update the LCD output
+	if (num_updated[0]) {
+		WriteNumLcd(0);
+	}
+	if (num_updated[1]) {
+		WriteNumLcd(1);
+	}
+
 	// update the RGB LED
 	uint8_t const is_red = !!(overflow_stat.is_ovf);
 	Output_SetRgbColor(0x1F * is_red, 0, 0);
+}
+
+/** Updates an operand based on the given keypress. */
+static void ProcessKey(uint8_t key)
+{
+	switch (num_base) {
+		case Bin:
+			// key can be 0 or 1; do not accept key if bits 14 or 15 are set (max int)
+			if (key <= 0b1 && !(nums[num_idx] & 0xC000)) {
+				// shift left for new digit
+				nums[num_idx] <<= 1;
+				// add new digit
+				nums[num_idx] += key;
+				// update the num output
+				num_updated[num_idx] = 1;
+			}
+			break;
+			
+		case Dec:
+			// key can be 0-9
+			if (key <= 9) {
+				// multiply operand by 10 and add new digit
+				uint32_t const num = nums[num_idx] * 10 + key;
+				// only update the number if it fits in 16 bits
+				if (num <= 0xFFFF) {
+					nums[num_idx] = num;
+					// update the num output
+					num_updated[num_idx] = 1;
+				}
+			}
+			break;
+			
+		case Hex:
+			// key can be 0-F; do not accept key if upper byte is non-zero (max int)
+			if (key <= 0xF && !(nums[num_idx] & 0xF000)) {
+				// shift left for new digit
+				nums[num_idx] <<= 4;
+				// add new digit
+				nums[num_idx] += key;
+				// update the num output
+				num_updated[num_idx] = 1;
+			}
+			break;
+	}
 }
 
 /**
@@ -314,7 +362,7 @@ static void RunOp(void)
 	ResetNums();
 	ResetLcd();
 
-	// set LCD output
+	// set output
 	if (div_0_err) {
 		// output an error to the LCD
 		strcpy(Output_GetLcdBuffer(0), "Err: div by 0");
@@ -322,9 +370,9 @@ static void RunOp(void)
 		// signal an error
 		is_err = 1;
 	} else {
-		// output the result to the LCD
+		// output the result
 		nums[0] = num;
-		UpdateNumLcd();
+		num_updated[0] = 1;
 
 		// set the overflow status
 		if (num > 0xFFFF || (num_base == Bin && (num & 0x8000))) {
@@ -333,60 +381,6 @@ static void RunOp(void)
 			overflow_stat.fields.result = 0;
 		}
 	}
-}
-
-/** Updates an operand based on the given keypress. */
-static void UpdateNum(uint8_t key)
-{
-	switch (num_base) {
-		case Bin:
-			// key can be 0 or 1; do not accept key if bits 14 or 15 are set (max int)
-			if (key <= 0b1 && !(nums[num_idx] & 0xC000)) {
-				// shift left for new digit
-				nums[num_idx] <<= 1;
-				// add new digit
-				nums[num_idx] += key;
-				// update the LCD
-				UpdateNumLcd();
-			}
-			break;
-			
-		case Dec:
-			// key can be 0-9
-			if (key <= 9) {
-				// multiply operand by 10 and add new digit
-				uint32_t const num = nums[num_idx] * 10 + key;
-				// only update the number if it fits in 16 bits
-				if (num <= 0xFFFF) {
-					nums[num_idx] = num;
-					// update the LCD
-					UpdateNumLcd();
-				}
-			}
-			break;
-			
-		case Hex:
-			// key can be 0-F; do not accept key if upper byte is non-zero (max int)
-			if (key <= 0xF && !(nums[num_idx] & 0xF000)) {
-				// shift left for new digit
-				nums[num_idx] <<= 4;
-				// add new digit
-				nums[num_idx] += key;
-				// update the LCD
-				UpdateNumLcd();
-			}
-			break;
-	}
-}
-
-/** Updates the current operand on the LCD. */
-static void UpdateNumLcd(void)
-{
-	char *lcd = Output_GetLcdBuffer(num_idx);
-	// convert the operand to a string
-	NumToStr(nums[num_idx], lcd + 1, LCD_BUFFER_STRLEN - 1);
-	// signal that we want to update this line of the LCD
-	Output_SignalLcdUpdate(num_idx);
 }
 
 /** Updates the current operand's overflow status. */
@@ -401,6 +395,16 @@ static void UpdateOvfStats(void)
 		overflow_stat.fields.num1 = 0;
 		overflow_stat.fields.num2 = 0;
 	}
+}
+
+/** Writes the given operand onto the LCD. */
+static void WriteNumLcd(uint8_t idx)
+{
+	char *lcd = Output_GetLcdBuffer(idx);
+	// convert the operand to a string
+	NumToStr(nums[idx], lcd + 1, LCD_BUFFER_STRLEN - 1);
+	// signal that we want to update this line of the LCD
+	Output_SignalLcdUpdate(idx);
 }
 
 /** Converts a binary number to a string. */
