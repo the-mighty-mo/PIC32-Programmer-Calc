@@ -33,7 +33,7 @@
 /** Function to initialize all the program modules. Call this once on reset. */
 static void App_Init()
 {
-	// Initialize all the peripherals
+	// Initialize the LED peripheral
 	LED_Init();
 	// Initialize the input module
 	Input_Init();

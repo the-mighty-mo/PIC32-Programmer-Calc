@@ -64,7 +64,6 @@ static void ProcessKey(uint8_t key);
 static void RunOp(void);
 static void UpdateOvfStats(void);
 static void WriteNumLcd(uint8_t idx);
-static void NumToStr(uint16_t num, char *str, size_t strlen);
 
 /** Resets the operands and operator. */
 static void ResetNums(void)
@@ -81,12 +80,13 @@ static void ResetLcd(void)
 {
 	char* lcd[] = {Output_GetLcdBuffer(0), Output_GetLcdBuffer(1)};
 
-	// first line: first operand
-	NumToStr(nums[0], lcd[0] + 1, LCD_BUFFER_STRLEN - 1);
-	lcd[0][0] = ' ';
-
-	// second line: operator and spaces
+	// clear both lines with spaces
+	memset(lcd[0], ' ', LCD_BUFFER_STRLEN);
 	memset(lcd[1], ' ', LCD_BUFFER_STRLEN);
+
+	// write the first operand to the first line
+	WriteNumLcd(0);
+	// write the current operator to the second line
 	lcd[1][0] = operators[operator];
 
 	// signal that we need to write to the LCD
@@ -329,6 +329,7 @@ static void RunOp(void)
 	uint32_t num = 0;
 	uint8_t div_0_err = 0;
 
+	// run the operation
 	switch (operator) {
 		case Add:
 			num = nums[0] + nums[1];
@@ -396,6 +397,8 @@ static void UpdateOvfStats(void)
 		overflow_stat.fields.num2 = 0;
 	}
 }
+
+static void NumToStr(uint16_t num, char *str, size_t strlen);
 
 /** Writes the given operand onto the LCD. */
 static void WriteNumLcd(uint8_t idx)
