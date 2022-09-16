@@ -9,9 +9,9 @@
 #include "peripherals/btn.h"
 #include "peripherals/lcd.h"
 #include "peripherals/led.h"
-#include "peripherals/rgbled.h"
 #include "input.h"
 #include "utils.h"
+#include "output.h"
 #include <string.h>
 
 // Operands
@@ -40,17 +40,15 @@ static enum Operator {
 	Xor
 } operator;
 
-// LCD output
-static char lcd[2][17] = {0};
-static uint8_t update_lcd[2] = {0};
+// operator characters for LCD
 static char const operators[] = {'+', '-', '*', '/', '&', '|', '^'};
 
 // RGBLED output
 static union {
-	// whether any operation wants the RGB LED red
-	uint8_t is_red;
-	// a bitfield of operations that can set the RGB LED
-	struct RgbRedStatus {
+	// whether any operation has overflowed
+	uint8_t is_ovf;
+	// a bitfield of operations that can overflow
+	struct OverflowStatus {
 		// first operand
 		uint8_t num1 : 1;
 		// second operand
@@ -58,14 +56,13 @@ static union {
 		// last result
 		uint8_t result : 1;
 	} fields;
-} rgb_is_red = {0};
-static uint8_t last_rgb_is_red = 0;
+} overflow_stat = {0};
 
 // Private functions
 static void RunOp(void);
 static void UpdateNum(uint8_t key);
 static void UpdateNumLcd(void);
-static void UpdateNumRgbLed(void);
+static void UpdateOvfStats(void);
 static void NumToStr(uint16_t num, char *str, size_t strlen);
 
 /** Resets the operands and operator. */
@@ -74,31 +71,25 @@ static void ResetNums(void)
 	memset(nums, 0, sizeof(nums));
 	num_idx = 0;
 	is_err = 0;
-	memset(&rgb_is_red, 0, sizeof(rgb_is_red));
+	memset(&overflow_stat, 0, sizeof(overflow_stat));
 }
 
-/** Clears the LCD output. */
-static void ClearLcd(void)
+/** Resets the LCD output. */
+static void ResetLcd(void)
 {
+	char* lcd[] = {Output_GetLcdBuffer(0), Output_GetLcdBuffer(1)};
+
 	// first line: first operand
-	NumToStr(nums[0], lcd[0] + 1, sizeof(lcd[0]) - 2);
+	NumToStr(nums[0], lcd[0] + 1, LCD_BUFFER_STRLEN - 1);
 	lcd[0][0] = ' ';
 
 	// second line: operator and spaces
-	memset(lcd[1], ' ', sizeof(lcd[1]) - 1);
+	memset(lcd[1], ' ', LCD_BUFFER_STRLEN);
 	lcd[1][0] = operators[operator];
 
 	// signal that we need to write to the LCD
-	update_lcd[0] = 1;
-	update_lcd[1] = 1;
-}
-
-/** Clears the RGB LED. */
-static void ClearRgb(void)
-{
-	memset(&rgb_is_red, 0, sizeof(rgb_is_red));
-	// assume RGB was red so we turn it off
-	last_rgb_is_red = 1;
+	Output_SignalLcdUpdate(0);
+	Output_SignalLcdUpdate(1);
 }
 
 void Calculator_Init(void)
@@ -107,10 +98,10 @@ void Calculator_Init(void)
 	ResetNums();
 	num_base = Hex;
 	operator = Add;
+	// clear the overflow status
+	memset(&overflow_stat, 0, sizeof(overflow_stat));
 	// clear the LCD display
-	ClearLcd();
-	// clear the RGB LED
-	ClearRgb();
+	ResetLcd();
 }
 
 /**
@@ -127,8 +118,8 @@ static void ProcessOperator(void)
 				// found the operator
 				operator = i;
 				// update the operator on the LCD
-				lcd[1][0] = operators[operator];
-				update_lcd[1] = 1;
+				Output_GetLcdBuffer(1)[0] = operators[operator];
+				Output_SignalLcdUpdate(1);
 				break;
 			}
 		}
@@ -140,18 +131,21 @@ static void ProcessOperator(void)
 /** Updates the numerical base on the LCD display. */
 static void UpdateBaseLcd(void)
 {
+	char *lcd = Output_GetLcdBuffer(0);
+
 	// update the LCD string to reflect the new base
-	NumToStr(nums[0], lcd[0] + 1, sizeof(lcd[0]) - 2);
-	update_lcd[0] = 1;
+	NumToStr(nums[0], lcd + 1, LCD_BUFFER_STRLEN - 1);
+	Output_SignalLcdUpdate(0);
 
 	// also update the second operand if we're on it
 	if (num_idx) {
-		NumToStr(nums[1], lcd[1] + 1, sizeof(lcd[1]) - 2);
-		update_lcd[1] = 1;
+		lcd = Output_GetLcdBuffer(1);
+		NumToStr(nums[1], lcd + 1, LCD_BUFFER_STRLEN - 1);
+		Output_SignalLcdUpdate(1);
 	}
 
-	// update the RGB LED for the current operand
-	UpdateNumRgbLed();
+	// update the overflow status for the current operand
+	UpdateOvfStats();
 }
 
 /**
@@ -190,14 +184,14 @@ static void ProcessClearBackspace(void)
 			nums[num_idx] = 0;
 			UpdateNumLcd();
 
-			// update the RGB LED for the current operand
-			UpdateNumRgbLed();
+			// update the overflow status for the current operand
+			UpdateOvfStats();
 			// disable red LED for last result, user wants to use what's left
-			rgb_is_red.fields.result = 0;
+			overflow_stat.fields.result = 0;
 		} else {
 			// clear all operands
 			ResetNums();
-			ClearLcd();
+			ResetLcd();
 		}
 	} else if (Input_GetNewBtn(BTN_L_BIT) && nums[num_idx]) {
 		// shift out the most recent digit (least significant))
@@ -205,10 +199,10 @@ static void ProcessClearBackspace(void)
 		// update the num LCD
 		UpdateNumLcd();
 
-		// update the RGB LED for the current operand
-		UpdateNumRgbLed();
+		// update the overflow status for the current operand
+		UpdateOvfStats();
 		// disable red LED for last result, user wants to use what's left
-		rgb_is_red.fields.result = 0;
+		overflow_stat.fields.result = 0;
 	}
 }
 
@@ -221,7 +215,7 @@ static uint8_t CheckForClear(void)
 
 		// reset the operands and clear the screen
 		ResetNums();
-		ClearLcd();
+		ResetLcd();
 
 		// signal that we cleared
 		return 1;
@@ -231,8 +225,7 @@ static uint8_t CheckForClear(void)
 	}
 }
 
-/** Processes the main logic of the calculator module. */
-static void Calculator_Process_Logic(void)
+void Calculator_Process(void)
 {
 	// process changes to the operator
 	ProcessOperator();
@@ -258,7 +251,7 @@ static void Calculator_Process_Logic(void)
 			UpdateNumLcd();
 
 			// disable red LED for last result, user wants to use what's left
-			rgb_is_red.fields.result = 0;
+			overflow_stat.fields.result = 0;
 		} else {
 			// user submitted second operand, run the operation
 			RunOp();
@@ -271,37 +264,13 @@ static void Calculator_Process_Logic(void)
 			UpdateNum(key);
 
 			// disable red LED for last result, user wants to use what's left
-			rgb_is_red.fields.result = 0;
-		}
-	}
-}
-
-/** Processes the output of the calculator module. */
-static void Calculator_Process_Output(void)
-{
-	// update the LCD output
-	for (int i = 0; i < sizeof(update_lcd) / sizeof(*update_lcd); ++i) {
-		if (update_lcd[i]) {
-			// update this line of the LCD
-			LCD_WriteStringAtPos(lcd[i], i, 0);
+			overflow_stat.fields.result = 0;
 		}
 	}
 
 	// update the RGB LED
-	uint8_t const is_red = !!(rgb_is_red.is_red);
-	if (is_red != last_rgb_is_red) {
-		// state changed, update RGB LED
-		RGBLED_SetValue(0x1F * is_red, 0, 0);
-	}
-	last_rgb_is_red = is_red;
-}
-
-void Calculator_Process(void)
-{
-	// process user input and logic
-	Calculator_Process_Logic();
-	// process the output
-	Calculator_Process_Output();
+	uint8_t const is_red = !!(overflow_stat.is_ovf);
+	Output_SetRgbColor(0x1F * is_red, 0, 0);
 }
 
 /**
@@ -343,13 +312,13 @@ static void RunOp(void)
 
 	// reset operands and clear screen
 	ResetNums();
-	ClearLcd();
+	ResetLcd();
 
 	// set LCD output
 	if (div_0_err) {
 		// output an error to the LCD
-		strcpy(lcd[0], "Err: div by 0");
-		update_lcd[0] = 1;
+		strcpy(Output_GetLcdBuffer(0), "Err: div by 0");
+		Output_SignalLcdUpdate(0);
 		// signal an error
 		is_err = 1;
 	} else {
@@ -357,11 +326,11 @@ static void RunOp(void)
 		nums[0] = num;
 		UpdateNumLcd();
 
-		// set the RGB LED to red if there was overflow
+		// set the overflow status
 		if (num > 0xFFFF || (num_base == Bin && (num & 0x8000))) {
-			rgb_is_red.fields.result = 1;
+			overflow_stat.fields.result = 1;
 		} else {
-			rgb_is_red.fields.result = 0;
+			overflow_stat.fields.result = 0;
 		}
 	}
 }
@@ -413,23 +382,24 @@ static void UpdateNum(uint8_t key)
 /** Updates the current operand on the LCD. */
 static void UpdateNumLcd(void)
 {
+	char *lcd = Output_GetLcdBuffer(num_idx);
 	// convert the operand to a string
-	NumToStr(nums[num_idx], lcd[num_idx] + 1, sizeof(lcd[num_idx]) - 2);
+	NumToStr(nums[num_idx], lcd + 1, LCD_BUFFER_STRLEN - 1);
 	// signal that we want to update this line of the LCD
-	update_lcd[num_idx] = 1;
+	Output_SignalLcdUpdate(num_idx);
 }
 
-/** Updates the current operand's RGB LED. */
-static void UpdateNumRgbLed(void)
+/** Updates the current operand's overflow status. */
+static void UpdateOvfStats(void)
 {
 	if (num_base == Bin) {
 		// We're in binary; if beyond 15 bits, signal overflow
-		rgb_is_red.fields.num1 = !!(nums[0] & 0x8000);
-		rgb_is_red.fields.num2 = !!(nums[1] & 0x8000);
+		overflow_stat.fields.num1 = !!(nums[0] & 0x8000);
+		overflow_stat.fields.num2 = !!(nums[1] & 0x8000);
 	} else {
 		// Not in binary, so operands cannot overflow
-		rgb_is_red.fields.num1 = 0;
-		rgb_is_red.fields.num2 = 0;
+		overflow_stat.fields.num1 = 0;
+		overflow_stat.fields.num2 = 0;
 	}
 }
 

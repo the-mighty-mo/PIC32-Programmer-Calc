@@ -17,6 +17,7 @@
         <itemPath>code/config.h</itemPath>
         <itemPath>code/calculator.h</itemPath>
         <itemPath>code/input.h</itemPath>
+        <itemPath>code/output.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -39,6 +40,7 @@
         <itemPath>code/main.c</itemPath>
         <itemPath>code/calculator.c</itemPath>
         <itemPath>code/input.c</itemPath>
+        <itemPath>code/output.c</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"

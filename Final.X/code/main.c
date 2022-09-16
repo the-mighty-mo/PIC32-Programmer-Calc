@@ -24,22 +24,21 @@
 #pragma config JTAGEN = OFF             // JTAG Enable (JTAG Disabled)
 
 #include "config.h"
-#include "peripherals/lcd.h"
 #include "peripherals/led.h"
-#include "peripherals/rgbled.h"
 #include "calculator.h"
 #include "input.h"
+#include "output.h"
 #include "utils.h"
 
 /** Function to initialize all the program modules. Call this once on reset. */
 static void App_Init()
 {
 	// Initialize all the peripherals
-	LCD_Init();
 	LED_Init();
-	RGBLED_Init();
 	// Initialize the input module
 	Input_Init();
+	// Initialize the output module
+	Output_Init();
 	// Initialize the calculator module
 	Calculator_Init();
 }
@@ -51,6 +50,8 @@ static void App_Process()
 	Input_Process();
 	// Process the calculator
 	Calculator_Process();
+	// Process outputs
+	Output_Process();
 }
 
 int main()
